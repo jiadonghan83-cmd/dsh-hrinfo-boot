@@ -1,0 +1,227 @@
+{
+  "generatedAt": "2026-10-06T11:46:56.344Z",
+  "sans": {
+    "family": "'Segoe UI', Arial, 'Helvetica Neue', Helvetica, sans-serif",
+    "size": 200,
+    "weight": 600
+  },
+  "hei": {
+    "family": "'Microsoft YaHei', SimHei, 'Noto Sans SC', sans-serif",
+    "size": 120,
+    "weight": 700
+  },
+  "latin": {
+    "H": {
+      "family": "'Segoe UI', Arial, 'Helvetica Neue', Helvetica, sans-serif",
+      "px": 200,
+      "weight": 600,
+      "text": "H",
+      "advance": 147.0703125,
+      "baseline": 900,
+      "ascent": 140,
+      "descent": 0,
+      "box": {
+        "x0": 217,
+        "y0": 760,
+        "x1": 329,
+        "y1": 899,
+        "w": 113,
+        "h": 140
+      }
+    },
+    "r": {
+      "family": "'Segoe UI', Arial, 'Helvetica Neue', Helvetica, sans-serif",
+      "px": 200,
+      "weight": 600,
+      "text": "r",
+      "advance": 74.0234375,
+      "baseline": 900,
+      "ascent": 102,
+      "descent": 0,
+      "box": {
+        "x0": 214,
+        "y0": 798,
+        "x1": 273,
+        "y1": 899,
+        "w": 60,
+        "h": 102
+      }
+    },
+    "i": {
+      "family": "'Segoe UI', Arial, 'Helvetica Neue', Helvetica, sans-serif",
+      "px": 200,
+      "weight": 600,
+      "text": "i",
+      "advance": 52.24609375,
+      "baseline": 900,
+      "ascent": 147,
+      "descent": 0,
+      "box": {
+        "x0": 212,
+        "y0": 753,
+        "x1": 240,
+        "y1": 899,
+        "w": 29,
+        "h": 147
+      },
+      "split": {
+        "x": 214,
+        "gap": 27,
+        "dotBottom": 773,
+        "stemTop": 800,
+        "score": 26.88
+      },
+      "dotBox": {
+        "x0": 212,
+        "y0": 753,
+        "x1": 240,
+        "y1": 773,
+        "w": 29,
+        "h": 21
+      },
+      "stemCentreX": 214,
+      "runsAtSplit": [
+        [
+          758,
+          773
+        ],
+        [
+          800,
+          899
+        ]
+      ],
+      "dotSpanX": {
+        "x0": 212,
+        "x1": 240
+      }
+    },
+    "n": {
+      "family": "'Segoe UI', Arial, 'Helvetica Neue', Helvetica, sans-serif",
+      "px": 200,
+      "weight": 600,
+      "text": "n",
+      "advance": 116.69921875,
+      "baseline": 900,
+      "ascent": 102,
+      "descent": 0,
+      "box": {
+        "x0": 214,
+        "y0": 798,
+        "x1": 304,
+        "y1": 899,
+        "w": 91,
+        "h": 102
+      }
+    },
+    "f": {
+      "family": "'Segoe UI', Arial, 'Helvetica Neue', Helvetica, sans-serif",
+      "px": 200,
+      "weight": 600,
+      "text": "f",
+      "advance": 68.9453125,
+      "baseline": 900,
+      "ascent": 150,
+      "descent": 0,
+      "box": {
+        "x0": 204,
+        "y0": 750,
+        "x1": 271,
+        "y1": 899,
+        "w": 68,
+        "h": 150
+      }
+    },
+    "o": {
+      "family": "'Segoe UI', Arial, 'Helvetica Neue', Helvetica, sans-serif",
+      "px": 200,
+      "weight": 600,
+      "text": "o",
+      "advance": 119.43359375,
+      "baseline": 900,
+      "ascent": 102,
+      "descent": 2,
+      "box": {
+        "x0": 208,
+        "y0": 798,
+        "x1": 311,
+        "y1": 901,
+        "w": 104,
+        "h": 104
+      }
+    }
+  },
+  "cjk": {
+    "海": {
+      "family": "'Microsoft YaHei', SimHei, 'Noto Sans SC', sans-serif",
+      "px": 120,
+      "weight": 700,
+      "text": "海",
+      "advance": 120,
+      "baseline": 900,
+      "ascent": 100,
+      "descent": 16,
+      "box": {
+        "x0": 201,
+        "y0": 800,
+        "x1": 318,
+        "y1": 915,
+        "w": 118,
+        "h": 116
+      }
+    },
+    "润": {
+      "family": "'Microsoft YaHei', SimHei, 'Noto Sans SC', sans-serif",
+      "px": 120,
+      "weight": 700,
+      "text": "润",
+      "advance": 120,
+      "baseline": 900,
+      "ascent": 101,
+      "descent": 16,
+      "box": {
+        "x0": 201,
+        "y0": 799,
+        "x1": 314,
+        "y1": 915,
+        "w": 114,
+        "h": 117
+      }
+    },
+    "信": {
+      "family": "'Microsoft YaHei', SimHei, 'Noto Sans SC', sans-serif",
+      "px": 120,
+      "weight": 700,
+      "text": "信",
+      "advance": 120,
+      "baseline": 900,
+      "ascent": 101,
+      "descent": 16,
+      "box": {
+        "x0": 201,
+        "y0": 799,
+        "x1": 318,
+        "y1": 915,
+        "w": 118,
+        "h": 117
+      }
+    },
+    "息": {
+      "family": "'Microsoft YaHei', SimHei, 'Noto Sans SC', sans-serif",
+      "px": 120,
+      "weight": 700,
+      "text": "息",
+      "advance": 120,
+      "baseline": 900,
+      "ascent": 101,
+      "descent": 14,
+      "box": {
+        "x0": 201,
+        "y0": 799,
+        "x1": 318,
+        "y1": 913,
+        "w": 118,
+        "h": 115
+      }
+    }
+  }
+}

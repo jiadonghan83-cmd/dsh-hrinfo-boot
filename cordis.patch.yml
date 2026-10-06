@@ -1,0 +1,7 @@
+# Bundle patch for dsh-hrinfo-boot.
+#
+# The row below mounts the plugin; the package's `dsh.client` block is what
+# gets the browser half served and loaded.
+- insert:
+    - id: boot-hrinfo
+      name: dsh-hrinfo-boot

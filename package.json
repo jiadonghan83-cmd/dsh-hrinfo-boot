@@ -1,0 +1,71 @@
+{
+  "name": "dsh-hrinfo-boot",
+  "version": "0.1.1",
+  "description": "HRINFO boot splash and unlock gate for DSH: a pure-vector HRINFO wordmark with falling-character rain, plus a 4-cell passcode panel that holds the interface until the code is entered.",
+  "type": "module",
+  "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./gate": "./lib/gate.mjs",
+    "./set-code": "./lib/set-code.mjs",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "dsh-hrinfo-set-code": "./src/set-code.mjs"
+  },
+  "files": [
+    "lib",
+    "src",
+    "scripts",
+    "assets",
+    "vendor",
+    "build.mjs",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "LICENSE-550c-boot"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "boot-animation",
+    "splash",
+    "matrix-rain",
+    "screen-lock",
+    "web-ui"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "engines": {
+      "dsh": ">=0.2.0-rc.1"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "check:build": "node build.mjs --check",
+    "check": "node --check lib/client.js && node --check lib/index.js && node --check lib/gate.mjs",
+    "verify": "npm run check && npm run check:build"
+  },
+  "dependencies": {},
+  "peerDependencies": {},
+  "peerDependenciesMeta": {}
+}

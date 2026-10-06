@@ -1,0 +1,16 @@
+<svg viewBox="0 0 700 220" xmlns="http://www.w3.org/2000/svg" class="hrinfo-logo">
+  <style>
+    .hrinfo-logo text{font-family:var(--hr-font,'Segoe UI',Arial,'Helvetica Neue',Helvetica,sans-serif);font-weight:600}
+    .hrinfo-word text{font-size:224.1px;fill:var(--hr-word,#eef4ff)}
+    .hrinfo-red{fill:var(--hr-red,#e02020)}
+  </style>
+  <g class="hrinfo-word">
+    <text x="-19" y="194">H</text>
+    <text x="147.4" y="194">r</text>
+    <text x="252.8" y="194">i</text>
+    <text x="318.2" y="194">n</text>
+    <text x="466.6" y="194">f</text>
+    <text x="575" y="194">o</text>
+  </g>
+  <circle class="hrinfo-red" cx="281.3" cy="40" r="17.28"/>
+</svg>
