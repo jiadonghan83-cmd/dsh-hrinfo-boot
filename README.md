@@ -16,10 +16,22 @@ dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot
 dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot#v0.1.2
 ```
 
-Then set an unlock code and restart DSH:
+On Windows there is also a one-click installer. `install.cmd` and
+`dsh-hrinfo-boot-0.1.2.tgz` live in this repository root — put them in one folder
+(or just clone the repository) and run:
+
+```bat
+install.cmd 7k2p
+```
+
+> `7k2p` here is only the example code used throughout this file — **the plugin has no
+> default code**. Run `install.cmd` with no argument and it asks you for one; pass
+> `--no-code` to leave the gate off. See *The unlock code* below.
+
+Then set an unlock code and restart DSH — `7k2p` is only an example, pick your own 4-character code:
 
 ```bash
-node node_modules/dsh-hrinfo-boot/src/set-code.mjs 7k2p
+node "%USERPROFILE%\.dsh\profiles\web\node_modules\dsh-hrinfo-boot\src\set-code.mjs" 7k2p
 ```
 
 ```bash
@@ -39,12 +51,35 @@ dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.2.tgz
 
 ## The unlock code
 
-There is **no default code**. With no code set the gate is off and the splash plays
+There is **no default code, and no universal code**: the `7k2p` used in these examples is only an example — set your own. With no code set the gate is off and the splash plays
 straight through — that is deliberate, so a fresh install can never lock anyone out.
 
 The code is four characters from `[0-9A-Za-z]`. It is never stored in plaintext: the host
 writes a PBKDF2-SHA512 record (210,000 iterations, 64-byte key, per-install random salt)
 to `$DSH_HOME/hrinfo-boot.json`, and comparison is constant-time.
+
+### Changing the code after a one-click install
+
+The script lives inside the installed plugin, under your DSH home
+(`%USERPROFILE%\.dsh` by default):
+
+```bat
+:: absolute path — works from any directory
+node "%USERPROFILE%\.dsh\profiles\web\node_modules\dsh-hrinfo-boot\src\set-code.mjs" 7k2p
+
+:: or the wrapper shipped with the installer (it builds that path for you)
+D:\SOFT\DSH\set-code.cmd 7k2p
+```
+
+With a non-default DSH home, pass it explicitly:
+
+```bat
+node "...\profiles\web\node_modules\dsh-hrinfo-boot\src\set-code.mjs" 7k2p --home "D:\elsewhere\.dsh"
+D:\SOFT\DSH\set-code.cmd 7k2p --home "D:\elsewhere\.dsh"
+```
+
+Then reload the page — the host re-reads the code file on every request — or press
+**Ctrl+Shift+L** to re-lock immediately.
 
 ```bash
 node src/set-code.mjs 7k2p        # set or change the code

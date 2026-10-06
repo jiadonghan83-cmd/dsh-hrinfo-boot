@@ -15,10 +15,21 @@ dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot
 dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot#v0.1.2
 ```
 
-設定解鎖密碼，然後重啟 DSH：
+Windows 上還有一個「一鍵安裝」：`install.cmd` 與 `dsh-hrinfo-boot-0.1.2.tgz` 就在本倉庫根目錄，
+把兩者放在同一個資料夾（或直接 clone 本倉庫）後執行：
+
+```bat
+install.cmd 7k2p
+```
+
+> 這裡的 `7k2p` 只是本文件沿用的**範例碼**——**本插件沒有任何預設密碼**。
+> 不給參數時 `install.cmd` 會問你要不要設；加 `--no-code` 則保持關卡關閉。
+> 詳見下一節「解鎖密碼」。
+
+設定解鎖密碼，然後重啟 DSH——這裡的 `7k2p` 只是範例，請換成你自己的 4 位碼：
 
 ```bash
-node node_modules/dsh-hrinfo-boot/src/set-code.mjs 7k2p
+node "%USERPROFILE%\.dsh\profiles\web\node_modules\dsh-hrinfo-boot\src\set-code.mjs" 7k2p
 ```
 
 ```bash
@@ -38,12 +49,33 @@ dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.2.tgz
 
 ## 解鎖密碼
 
-**沒有預設密碼。** 未設定密碼時閘門是關閉的，片頭直接播完——
+**沒有預設密碼，也沒有「萬用碼」。** 下文出現的 `7k2p` 只是沿用的範例，請自己設一組。 未設定密碼時閘門是關閉的，片頭直接播完——
 這是刻意的，確保全新安裝不可能把人鎖在外面。
 
 密碼為 4 個字元，只能使用 `[0-9A-Za-z]`。**不存明文**：host 端寫入
 PBKDF2-SHA512 記錄（210,000 次迭代、64 bytes 金鑰、每次安裝隨機 salt）到
 `$DSH_HOME/hrinfo-boot.json`，比對使用 constant-time。
+
+### 一鍵安裝完成後，去哪裡改密碼
+
+腳本在已安裝的插件裡，位於你的 DSH home（預設 `%USERPROFILE%\.dsh`）之下：
+
+```bat
+:: 絕對路徑：在任何目錄都能跑
+node "%USERPROFILE%\.dsh\profiles\web\node_modules\dsh-hrinfo-boot\src\set-code.mjs" 7k2p
+
+:: 或用安裝包裡的包裝腳本（它會自己拼出上面的路徑）
+D:\SOFT\DSH\set-code.cmd 7k2p
+```
+
+DSH 的 home 不在預設位置時，明確指定：
+
+```bat
+node "...\profiles\web\node_modules\dsh-hrinfo-boot\src\set-code.mjs" 7k2p --home "D:\某處\.dsh"
+D:\SOFT\DSH\set-code.cmd 7k2p --home "D:\某處\.dsh"
+```
+
+改完**重新整理頁面**即可（host 每次請求都重讀碼檔），或按 **Ctrl+Shift+L** 立刻重新上鎖。
 
 ```bash
 node src/set-code.mjs 7k2p        # 設定或變更密碼

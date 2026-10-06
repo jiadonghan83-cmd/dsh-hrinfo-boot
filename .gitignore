@@ -1,0 +1,5 @@
+# Dependencies are installed into the profile's node_modules, never here.
+node_modules/
+
+# install.cmd can rebuild a tarball from this folder when one is missing
+# (the committed dsh-hrinfo-boot-<version>.tgz is the prebuilt one).
