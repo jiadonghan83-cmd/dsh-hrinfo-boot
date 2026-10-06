@@ -10,7 +10,10 @@ outside `$DSH_HOME`.
 ## Install
 
 ```bash
-dsh plugin --profile web add dsh-hrinfo-boot
+# from GitHub (recommended — lib/ ships prebuilt, so pnpm never runs a build)
+dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot
+# pin the released version
+dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot#v0.1.2
 ```
 
 Then set an unlock code and restart DSH:
@@ -31,7 +34,7 @@ at install time fails for most people. `lib/` is committed instead.
 
 ```bash
 dsh plugin --profile web add /path/to/dsh-hrinfo-boot
-dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.0.tgz
+dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.2.tgz
 ```
 
 ## The unlock code

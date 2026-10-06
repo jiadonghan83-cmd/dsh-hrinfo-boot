@@ -9,7 +9,10 @@ HRINFO 開機動畫與解鎖閘門，DSH Web GUI 用的插件。
 ## 安裝
 
 ```bash
-dsh plugin --profile web add dsh-hrinfo-boot
+# 從 GitHub 安裝（推薦；lib/ 已預先建置，pnpm 不需要跑任何建置腳本）
+dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot
+# 鎖定發行版本
+dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot#v0.1.2
 ```
 
 設定解鎖密碼，然後重啟 DSH：
@@ -30,7 +33,7 @@ dsh --profile web
 
 ```bash
 dsh plugin --profile web add /path/to/dsh-hrinfo-boot
-dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.0.tgz
+dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.2.tgz
 ```
 
 ## 解鎖密碼
