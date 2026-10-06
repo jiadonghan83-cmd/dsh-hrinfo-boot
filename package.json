@@ -1,6 +1,6 @@
 {
   "name": "dsh-hrinfo-boot",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "HRINFO boot splash and unlock gate for DSH: a pure-vector HRINFO wordmark with falling-character rain, plus a 4-cell passcode panel that holds the interface until the code is entered.",
   "type": "module",
   "main": "./lib/index.js",

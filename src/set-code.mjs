@@ -2,8 +2,9 @@
  * Set, change, or clear the dsh-hrinfo-boot unlock code.
  *
  * The code is never stored in plaintext: this writes a PBKDF2-SHA512 record into
- * `$DSH_HOME/hrinfo-boot.json`, which is the same file the host half reads. Run it
- * with the DSH environment (so DSH_HOME resolves) or pass --home.
+ * `$DSH_HOME/hrinfo-boot.json`, which is the same file the host half reads. The
+ * home comes from DSH_HOME, or from DSH's default `~/.dsh` when the host was
+ * started without that variable; pass --home to override either.
  *
  * Usage:
  *   node set-code.mjs 7k2p             set the code
@@ -12,7 +13,7 @@
  *   node set-code.mjs --status         show whether a code is set
  */
 import { existsSync, readFileSync } from 'node:fs'
-import { CODE_LENGTH, isValidCode, readConfig, writePassword } from './gate.mjs'
+import { CODE_LENGTH, isValidCode, readConfig, resolveHome, writePassword } from './gate.mjs'
 
 const args = process.argv.slice(2)
 const flags = new Set(args.filter((a) => a.startsWith('--')))
@@ -36,7 +37,7 @@ function fail(message) {
 
 if (flags.has('--status')) {
   const found = readConfig(env)
-  const home = env.DSH_HOME ?? '(DSH_HOME not set)'
+  const home = resolveHome(env)
   process.stdout.write(`home:   ${home}\n`)
   process.stdout.write(`config: ${found.path ?? '(unresolved)'}\n`)
   if (found.path !== null && existsSync(found.path)) {

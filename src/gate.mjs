@@ -22,6 +22,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { homedir } from 'node:os'
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from 'node:crypto'
 
 /** PBKDF2 cost. High enough to be slow for an attacker, fast enough for a login. */
@@ -56,19 +57,36 @@ export function isValidCode(value) {
 }
 
 /**
+ * Resolve the DSH home directory that owns `hrinfo-boot.json`.
+ *
+ * DSH_HOME is the documented location, but DSH does not always export it to the
+ * host process: starting the CLI straight from a shell or a shortcut — `dsh web`
+ * with no DSH_HOME in the environment — yields a host where `process.env.DSH_HOME`
+ * is undefined. Treating that as "no home" silently disarms the gate: the splash
+ * still plays, but no passcode panel ever appears, and nothing in the UI explains
+ * why. Falling back to DSH's own default (`~/.dsh`, the path `dsh-home-paths`
+ * resolves to) keeps the gate armed however the host was started.
+ *
+ * @param env - environment to resolve DSH_HOME from.
+ * @returns the absolute home directory holding the gate config.
+ */
+export function resolveHome(env = process.env) {
+  const fromEnv = typeof env.DSH_HOME === 'string' && env.DSH_HOME !== '' ? env.DSH_HOME : null
+  return fromEnv ?? join(homedir(), '.dsh')
+}
+
+/**
  * Read the gate configuration.
  *
- * Locating it from DSH_HOME (rather than the module directory) matters for
+ * Locating it from the DSH home (rather than the module directory) matters for
  * portability: an installed plugin lives in the profile's node_modules and must
  * not try to write there.
  *
- * @param env - environment to resolve DSH_HOME from.
+ * @param env - environment to resolve the DSH home from.
  * @returns the parsed config, or a disabled default when absent/unreadable.
  */
 export function readConfig(env = process.env) {
-  const home = typeof env.DSH_HOME === 'string' && env.DSH_HOME !== '' ? env.DSH_HOME : null
-  if (home === null) return { enabled: false, path: null, config: null }
-  const path = join(home, 'hrinfo-boot.json')
+  const path = join(resolveHome(env), 'hrinfo-boot.json')
   if (!existsSync(path)) return { enabled: false, path, config: null }
   try {
     const config = JSON.parse(readFileSync(path, 'utf8'))
@@ -90,6 +108,7 @@ function derive(password, salt) {
 
 /**
  * Hash a password for storage.
+ *
  * @param password - the plaintext to store.
  * @returns the record to place under `password` in the config file.
  */
@@ -179,9 +198,7 @@ export function writePassword(password, env = process.env) {
       `code must be exactly ${CODE_LENGTH} characters from [0-9A-Za-z], got ${JSON.stringify(password)}`,
     )
   }
-  const home = typeof env.DSH_HOME === 'string' && env.DSH_HOME !== '' ? env.DSH_HOME : null
-  if (home === null) throw new Error('DSH_HOME is not set')
-  const path = join(home, 'hrinfo-boot.json')
+  const path = join(resolveHome(env), 'hrinfo-boot.json')
   let config = {}
   if (existsSync(path)) {
     try {

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.2
+
+- The gate no longer depends on `DSH_HOME` being exported to the host process.
+  `gate.mjs` resolves the home through a new `resolveHome()`, which falls back to
+  DSH's own default (`~/.dsh`, the path `dsh-home-paths` resolves) when the variable
+  is absent. A host started straight from a shell or a shortcut — `dsh web` with no
+  `DSH_HOME` in the environment — now keeps the passcode panel instead of silently
+  playing the splash through, which is what happened on a machine whose DSH was never
+  launched by `restart-dsh.cmd`.
+- `set-code --status` prints the resolved home rather than "DSH_HOME not set", and
+  `writePassword` no longer throws when the variable is missing.
+- Verified with `DSH_HOME` removed from the environment: the served index carries
+  `globalThis["__dsh550cGate"] = true`, `POST /hrinfo-boot/unlock` returns 200 for the
+  configured code and 401 WRONG PASSWORD for another one.
+
 ## 0.1.1
 
 - The published tarball now carries everything needed to rebuild: `build.mjs`,
