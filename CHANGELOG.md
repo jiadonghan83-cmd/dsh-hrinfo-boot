@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3
+
+- The rain is a backdrop again. `mountRain()` appends its canvas to `.boot-stage` with
+  `z-index: 900` — inside the splash's stacking context, above the dark backdrop
+  (`.hrinfo-bg`, 0) and below the wordmark (`.hrinfo-stage`, 1000) and the passcode cells
+  (`.hrinfo-lock`, 1200). The previous revision mounted the canvas on `document.body` at
+  `z-index: 2147483300` to outrank the overlay, which printed falling glyphs across the
+  logo and the four cells.
+- Verified on a live instance: canvas parent `boot-stage`, `position:absolute`,
+  `z-index:900`, full-viewport 1440x900 rect, wordmark at 1000, backdrop at 0.
+
 ## 0.1.2
 
 - The gate no longer depends on `DSH_HOME` being exported to the host process.
