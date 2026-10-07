@@ -15,7 +15,7 @@ dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot
 dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot#v0.1.2
 ```
 
-Windows 上還有一個「一鍵安裝」：`install.cmd` 與 `dsh-hrinfo-boot-0.1.6.tgz` 就在本倉庫根目錄，
+Windows 上還有一個「一鍵安裝」：`install.cmd` 與 `dsh-hrinfo-boot-0.1.7.tgz` 就在本倉庫根目錄，
 把兩者放在同一個資料夾（或直接 clone 本倉庫）後執行：
 
 ```bat
@@ -44,7 +44,7 @@ dsh --profile web
 
 ```bash
 dsh plugin --profile web add /path/to/dsh-hrinfo-boot
-dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.6.tgz
+dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.7.tgz
 ```
 
 ## 解鎖密碼

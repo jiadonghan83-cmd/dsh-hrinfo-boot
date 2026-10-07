@@ -287,11 +287,18 @@ const rainCss =
   // and the finale brings both back — that final frame, rain over the dimmed desktop with
   // the HRINFO wordmark and the prominent centred cells, is the page the user asked for.
   // Opacity rather than display, so the panel keeps its layout and stays focusable at the end.
-  // Phase visibility is driven from JS with inline styles (see the finale block). Every
-  // stylesheet-based attempt at this failed to take effect, while every JS-based change
-  // worked (the pending-finale class, the deferred rain mount, the #app dim, the panel
-  // position), so the reveal must not depend on CSS at all.
-  '' +
+  // The gate layer is the element the finale hides and reveals: it holds the wordmark clone
+  // and the passcode panel and, unlike .hrinfo-stage, it is never torn out of the DOM.
+  // Layout: anchored to the lower third so the finale does not cover the SYSTEM IS
+  // REWRITTEN banner; the rain canvas mounts INSIDE this layer (a body-level canvas was
+  // hidden behind the overlay's own backdrop) and is given z-index 900 by the rain module,
+  // so the logo (950) and the panel (1000) stay above it.
+  '.hrinfo-gate-layer{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:20px;padding-bottom:9vh;z-index:3000;pointer-events:none}' +
+  '.hrinfo-gate-layer>*{pointer-events:auto}' +
+  // min(...,52vh) keeps the wordmark proportional in SHORT windows, where a width-only cap made it tall enough to collide with the banner and the passcode cells.
+  '.hrinfo-gate-layer svg{position:relative;z-index:950;width:min(680px,80vw,52vh) !important;height:auto;display:block;margin:0 auto;transition:none !important;animation:none !important}' +
+  '.hrinfo-gate-layer svg *{opacity:1 !important;transform:none !important;animation:none !important;transition:none !important;stroke-dashoffset:0 !important;stroke-dasharray:none !important}' +
+  '.hrinfo-gate-layer .hrinfo-lock{position:relative !important;z-index:1000 !important;margin:0 !important;transform:none !important}' +
   // Full mode ships the APP_MARKUP stylesheet, whose global `input` rules beat the lock
   // sheet's `.hrinfo-lock-input{background:transparent}` on specificity, so the four
   // passcode cells rendered as blank white bars. Pin them back.
@@ -523,13 +530,28 @@ replaceLine('lock release', 'const skip = () => {', (ind) => {
   const s = `${ind}  `
   return [
     `${b}const release = () => {`,
+    `${s}// One-shot: once the host accepts the code, the safety reveal listeners must stop
+    ${s}// working, or they pull the gate back on the next keypress and the exit never lands.
+    ${s}record.released = true`,
     `${s}record.locked = false`,
     `${s}host.classList.remove('hrinfo-locked')`,
+    // unlock-flash: hide the gate layer the instant the code is accepted. Otherwise the
+    // wordmark can be painted one last time at its layout position while the overlay fades,
+    // which showed up as a stray HRINFO popping in at the bottom of the screen.
+    // unlock-flash: make the gate layer and the boot layer INSTANTLY invisible. A plain
+    // opacity fade was not enough: the panel is disposed a moment later, the bottom-anchored
+    // stack collapses and the wordmark slides down inside the fading layer, which read as an
+    // HRINFO popping in at the bottom right as the splash retired.
+    `${s}try {`,
+    `${s}  const sr = host.shadowRoot`,
+    `${s}  const hideNow = (el) => { if (el === null || el === undefined) return; el.style.transition = 'none'; el.style.animation = 'none'; el.style.opacity = '0'; el.style.visibility = 'hidden' }`,
+    `${s}  if (sr) { hideNow(sr.querySelector('.hrinfo-gate-layer')); hideNow(sr.querySelector('#boot')) }`,
+    `${s}} catch (error) {}`,
     `${s}if (record.lockPanel !== null) {`,
     `${s}  record.lockPanel.dispose()`,
     `${s}  record.lockPanel = null`,
     `${s}}`,
-    `${s}record.fadeTimer = window.setTimeout(dispose, FADE_MS + 40)`,
+    `${s}window.setTimeout(dispose, 60)`,
     `${b}}`,
     `${b}`,
     `${b}const skip = () => {`,
@@ -563,23 +585,67 @@ replaceLine('finale state', 'record.rain = mountRain(stage)', (ind) =>
   `${ind}  // The stage (wordmark + passcode panel) is inside the overlay's shadow root, so it is\n` +
   `${ind}  // reachable directly. Visibility is set as INLINE styles from here: the stylesheet route\n` +
   `${ind}  // kept failing to take effect, while every JS-driven change worked.\n` +
-  `${ind}  // This helper can only ever REVEAL the gate, never hide it. An earlier revision also\n` +
-  `${ind}  // hid it at the start so the log phase would own the screen; when that reveal failed the\n` +
-  `${ind}  // user was locked out with no visible input at all. Reachability beats the nicety.\n` +
-  `${ind}  const finaleStage = () => host.shadowRoot === undefined ? null : host.shadowRoot.querySelector('.hrinfo-stage')\n` +
-  `${ind}  const setStageVisible = () => {\n` +
+  `${ind}  // Phase 1 — the terminal log owns the screen; the wordmark and passcode panel are\n` +
+  `${ind}  // hidden with OPACITY ONLY. Not display:none, not visibility:hidden: those made the\n` +
+  `${ind}  // input unreachable and focusable-never, which is how an earlier revision locked the\n` +
+  `${ind}  // user out of a black screen. A transparent panel is still in the layout, still\n` +
+  `${ind}  // clickable and still keyboard-focusable, so the gate is never truly out of reach.\n` +
+  `${ind}  const finaleStage = () => {\n` +
+  `${ind}    try {\n` +
+  `${ind}      if (!host.shadowRoot) return null\n` +
+  `${ind}      // The gate layer is the durable one; .hrinfo-stage is only a fallback, because the\n` +
+  `${ind}      // upstream full-mode show removes it from the DOM after the boot phase.\n` +
+  `${ind}      return host.shadowRoot.querySelector('.hrinfo-gate-layer') ?? host.shadowRoot.querySelector('.hrinfo-stage')\n` +
+  `${ind}    } catch (error) {\n` +
+  `${ind}      return null\n` +
+  `${ind}    }\n` +
+  `${ind}  }\n` +
+  `${ind}  const setStageVisible = (visible) => {\n` +
   `${ind}    const el = finaleStage()\n` +
   `${ind}    if (el === null) return\n` +
   `${ind}    el.style.transition = 'opacity 900ms ease-out'\n` +
-  `${ind}    el.style.opacity = '1'\n` +
-  `${ind}    el.style.visibility = 'visible'\n` +
+  `${ind}    el.style.opacity = visible ? '1' : '0'\n` +
   `${ind}  }\n` +
+  `${ind}  const revealStage = () => { if (record.released === true) return; setStageVisible(true) }\n` +
+  `${ind}  // Registered BEFORE the hide, so the escape hatch exists even if something throws\n` +
+  `${ind}  // below. Any key or click brings the gate back instantly: a timer that fails to fire\n` +
+  `${ind}  // can never strand the user.\n` +
+  `${ind}  window.addEventListener('keydown', revealStage, true)\n` +
+  `${ind}  window.addEventListener('pointerdown', revealStage, true)\n` +
+  `${ind}  host.addEventListener('click', revealStage, true)\n` +
+  `${ind}  // Hiding must never abort the rest of this block: the reveal timers, the escape\n` +
+  `${ind}  // listeners and record.mountFinaleRain are what make the finale work at all.\n` +
+  `${ind}  try { setStageVisible(false) } catch (error) { console.error('[hrinfo-boot] stage hide failed', error) }\n` +
+  `${ind}  // retitle-earliest: the animation reveals #final itself, so retitling it only in\n` +
+  `${ind}  // the finale let the original SYSTEM IS REWRITTEN text paint first (a visible flash).\n` +
+  `${ind}  // Do it now, before the show can reveal anything.\n` +
+  `${ind}  try {\n` +
+  `${ind}    const earlyBanner = host.shadowRoot ? host.shadowRoot.querySelector('#final') : null\n` +
+  `${ind}    if (earlyBanner !== null) earlyBanner.textContent = 'HRINFO SYSTEM'\n` +
+  `${ind}  } catch (error) {}\n` +
+  `${ind}  // opening black screen: the upstream show keeps #app (the desktop with the log) at\n` +
+  `${ind}  // opacity 0 for the first couple of seconds, which reads as dead air before the boot\n` +
+  `${ind}  // sequence starts. Show it immediately; the finale dims it to 35 % again.\n` +
+  `${ind}  try {\n` +
+  `${ind}    const appEl = host.shadowRoot ? host.shadowRoot.querySelector('#app') : null\n` +
+  `${ind}    if (appEl !== null) { appEl.style.transition = 'none'; appEl.style.opacity = '1' }\n` +
+  `${ind}  } catch (error) {}\n` +
+  `${ind}  // showLockPanel() builds the gate layer one frame after this block, so re-assert the\n` +
+  `${ind}  // hidden state once it exists. Safe by construction: the reveal listeners (any key or\n` +
+  `${ind}  // click) and the 30 s / 33 s timers are already registered above.\n` +
+  `${ind}  window.setTimeout(() => { if (record.finaleDone !== true) setStageVisible(false) }, 700)\n` +
   `${ind}  const finaleCanvas = () => document.querySelector('canvas.hrinfo-rain')\n` +
-  `${ind}  const finaleApp = host.shadowRoot === undefined ? null : host.shadowRoot.querySelector('#app')\n` +
+  `${ind}  const finaleApp = (() => { try { return host.shadowRoot ? host.shadowRoot.querySelector('#app') : null } catch (error) { return null } })()\n` +
   `${ind}  record.revealFinale = () => {\n` +
   `${ind}    setStageVisible(true)\n` +
   `${ind}    document.body.classList.remove('hrinfo-pending-finale')\n` +
   `${ind}    document.body.classList.add('hrinfo-finale')\n` +
+  `${ind}    // The banner IS the finale's brand element in full mode: keep it on screen and\n` +
+  `${ind}    // retitle it. Nothing crossfades, nothing overlaps, and short windows stay clean.\n` +
+  `${ind}    try {\n` +
+  `${ind}      const bannerEl = host.shadowRoot ? host.shadowRoot.querySelector('#final') : null\n` +
+  `${ind}      if (bannerEl !== null) bannerEl.textContent = 'HRINFO SYSTEM'\n` +
+  `${ind}    } catch (error) {}\n` +
   `${ind}    // Full mode mounts the rain here and nowhere else: no element, no early rain.\n` +
   `${ind}    if (mode === 'full' && record.rain === null) record.rain = record.mountFinaleRain()\n` +
   `${ind}    const shown = finaleCanvas()\n` +
@@ -609,7 +675,11 @@ replaceLine('finale state', 'record.rain = mountRain(stage)', (ind) =>
   `${ind}  // (the canvas is a BODY-LEVEL element), and a missing element cannot be seen.\n` +
   `${ind}  record.mountFinaleRain = () => {\n` +
   `${ind}    try {\n` +
-  `${ind}      return mountRain(stage)\n` +
+  `${ind}      // Mount INSIDE the surviving gate layer: a body-level canvas is hidden behind the\n` +
+  `${ind}      // overlay's own opaque backdrop (measured: rain opacity 1 on BODY while nothing was\n` +
+  `${ind}      // visible on screen). Fall back to the body only when no gate is configured.\n` +
+  `${ind}      const finaleLayer = (host.shadowRoot ? host.shadowRoot.querySelector('.hrinfo-gate-layer') : null) || document.body\n` +
+  `${ind}      return mountRain(finaleLayer)\n` +
   `${ind}    } catch (error) {\n` +
   `${ind}      console.error('[hrinfo-boot] finale rain failed', error)\n` +
   `${ind}      return null\n` +
@@ -649,7 +719,34 @@ replaceLine(
     `${ind}  host.classList.add('hrinfo-locked')\n` +
     `${ind}  const lockStyle = document.createElement('style')\n` +
     `${ind}  lockStyle.textContent = LOCK_CSS\n` +
-    `${ind}  const lockTarget = stage.querySelector('.hrinfo-stage') ?? stage\n` +
+    `${ind}  // The panel must NOT live inside .hrinfo-stage. In full mode the upstream show tears\n` +
+  `${ind}  // that stage out of the DOM once the boot phase ends (a live CDP timeline showed the\n` +
+  `${ind}  // stage and its inline <style> disappearing ~2 s in), which destroyed the gate, made\n` +
+  `${ind}  // the finale unreachable, and let the overlay dispose itself. A dedicated layer on the\n` +
+  `${ind}  // shadow root survives all of that.\n` +
+  `${ind}  const lockTarget = document.createElement('div')\n` +
+  `${ind}  lockTarget.className = 'hrinfo-gate-layer'\n` +
+  `${ind}  // Simple mode has no terminal banner to clear, so the wordmark and the panel stay\n` +
+  `${ind}  // vertically centred; full mode anchors them low. Set in JS on purpose: every\n` +
+  `${ind}  // stylesheet rule added for this overlay failed to take effect, every JS style worked.\n` +
+  `${ind}  if (mode !== 'full') {\n` +
+  `${ind}    lockTarget.style.justifyContent = 'center'\n` +
+  `${ind}    lockTarget.style.paddingBottom = '0'\n` +
+  `${ind}  }\n` +
+  `${ind}  ;(host.shadowRoot ?? host).appendChild(lockTarget)\n` +
+  `${ind}  // Carry the wordmark over as a static clone, so the finale can show LOGO + panel even\n` +
+  `${ind}  // after the boot stage is gone.\n` +
+  `${ind}  // The wordmark's own <style> block lives in the boot markup and is removed with\n` +
+  `${ind}  // the stage, which left the cloned SVG with no font/fill rules and invisible.\n` +
+  `${ind}  stage.querySelectorAll('style').forEach((sheet) => { lockTarget.appendChild(sheet.cloneNode(true)) })\n` +
+  `${ind}  const gateWordmark = stage.querySelector('.hrinfo-stage svg')\n` +
+  `${ind}  if (gateWordmark !== null) lockTarget.appendChild(gateWordmark)\n` +
+  `${ind}  // Full mode brands the finale with the banner, so the wordmark steps aside there;\n` +
+  `${ind}  // simple mode has no banner and keeps the wordmark.\n` +
+  `${ind}  if (mode === 'full') gateWordmark.style.display = 'none'\n` +
+  `${ind}  // Born hidden while the animation runs: no timer race can flash the logo or the\n` +
+  `${ind}  // panel during the log phase, and the finale's reveal sets opacity back to 1.\n` +
+  `${ind}  if (mode === 'full' && record.finaleDone !== true) lockTarget.style.opacity = '0'\n` +
     `${ind}  lockTarget.appendChild(lockStyle)\n` +
     `${ind}  record.lockPanel = createLockPanel({\n` +
     `${ind}    submitLabel: 'UNLOCK',\n` +
@@ -674,6 +771,10 @@ replaceLine(
     `${ind}    },\n` +
     `${ind}  })\n` +
     `${ind}  lockTarget.appendChild(record.lockPanel.element)\n` +
+    `${ind}  // Phase 1 hiding is handled by the finale block's own 700 ms timer: setStageVisible\n` +
+    `${ind}  // lives in that scope, not in this one (calling it from here threw\n` +
+    `${ind}  // "setStageVisible is not defined" into the console, while the timer still hid the\n` +
+    `${ind}  // layer correctly, so behaviour was right and only the log was noisy).\n` +
     `${ind}}\n` +
     `${ind}// Exposed so the lock shortcut can summon the gate even when no timer is\n` +
     `${ind}// pending — after an unlock there is no countdown left to fire it.\n` +

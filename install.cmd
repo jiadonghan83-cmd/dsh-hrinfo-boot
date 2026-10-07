@@ -21,7 +21,7 @@ REM ============================================================================
 
 setlocal EnableDelayedExpansion
 set "HERE=%~dp0"
-set "TGZ=%HERE%dsh-hrinfo-boot-0.1.6.tgz"
+set "TGZ=%HERE%dsh-hrinfo-boot-0.1.7.tgz"
 set "DSH_HOME=%USERPROFILE%\.dsh"
 set "PROFILE_DIR=%DSH_HOME%\profiles\web"
 set "PLUGIN=%PROFILE_DIR%\node_modules\dsh-hrinfo-boot"

@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.1.7
+
+Full-mode finale, finalised:
+
+- The SYSTEM banner is the finale brand element. It is retitled HRINFO SYSTEM at overlay
+  mount — before the animation can reveal it — so the old text never paints (it used to
+  flash first and be replaced a moment later). The big wordmark is hidden in full mode;
+  simple mode keeps it.
+- Simple mode is vertically centred again. The layout is chosen in JS by mode, because the
+  :host([data-mode=simple]) stylesheet rule never matched AND broke the build: CSS_550C is
+  serialised as a DOUBLE-QUOTED JS string, so a double quote anywhere in this CSS ends the
+  string. Never put double quotes in this plugin CSS.
+- No opening black screen: the upstream show keeps #app transparent for the first seconds;
+  it is now shown from the first frame and the finale dims it to 35 %.
+- Small windows no longer overlap: the wordmark is capped by viewport height as well
+  (min(680px,80vw,52vh)), and the banner no longer collides with it.
+- Unlock is one-shot and instant: a released flag disables the safety reveal listeners, the
+  gate layer and boot layer are hidden instantly (transition/animation off), and the overlay
+  is disposed 60 ms after acceptance — no fade window, so no stray wordmark paint and no
+  need for a second submit.
+
+Structural fixes that made the finale possible at all:
+
+- The passcode panel lives in a durable .hrinfo-gate-layer. In full mode the upstream show
+  removes .hrinfo-stage about two seconds in, which used to destroy the panel, make the
+  finale unreachable and let the overlay dispose itself.
+- That layer receives the wordmark and its stylesheets by MOVE (a clone left the original on
+  screen too, showing two overlapping logos), and it is born hidden so no timer race can
+  flash the logo or the panel during the log phase.
+- The rain is not mounted at all until the finale in full mode, and mounts INSIDE the gate
+  layer: a body-level canvas was hidden behind the overlay opaque backdrop.
+
+Operational note:
+
+- A hrinfo-boot.json whose password field is EMPTY makes the host inject gate=false. The
+  splash then exits at the end with no rain and no panel (it looks like a broken finale but
+  is an unarmed gate). Re-set it with src/set-code.mjs --set <code>.
 ## 0.1.6 — hotfix
 
 **0.1.5 could lock you out; do not use it.** In 0.1.5 the wordmark and the passcode panel
