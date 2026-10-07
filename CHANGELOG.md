@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.4
+
+- The settings row is HRINFO-branded: `550C 开机动画` becomes `HRINFO 开机动画` and the
+  caption now reads `启动时播放 HRINFO 片头（基于 550C 开发）；完整模式可用点击或 Esc 跳过动画。`,
+  so the 550C lineage is stated instead of implied by the label.
+- Fixed: with a passcode configured, **full mode could not be left at all**. The gate patch
+  makes `finish()` return early while `record.locked` ("the splash must not retire until the
+  host says yes"), which also turned the click handler, the Escape handler and the 30 s
+  watchdog into no-ops — and the full show keeps painting over `.hrinfo-stage`, so the
+  panel was unreachable. Now `ensureLockVisible()` checks whether the panel is actually on
+  screen; if it is not, it retires the splash layer (`.hrinfo-lock-only #boot{display:none}`)
+  and floats the panel on the shadow root (`:host>.hrinfo-lock-root`, z-index 3000). Escape
+  and click call it, and a 3.2 s safety timer re-asserts the watchdog's promise that the
+  splash can never strand the user. The gate itself stays armed: skipping ends the
+  animation, never the lock.
+
 ## 0.1.3
 
 - The rain is a backdrop again. `mountRain()` appends its canvas to `.boot-stage` with

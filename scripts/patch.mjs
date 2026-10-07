@@ -177,6 +177,11 @@ replaceOnce(
 for (const [from, to] of [
   ['550C SYSTEM BOOT', 'HRINFO SYSTEM BOOT'],
   ['550C CORE TERMINAL', 'HRINFO CORE TERMINAL'],
+  ['550C 开机动画', 'HRINFO 开机动画'],
+  [
+    '启动时播放 550C 片头；完整模式可用点击或 Esc 跳过。',
+    '启动时播放 HRINFO 片头（基于 550C 开发）；完整模式可用点击或 Esc 跳过动画。',
+  ],
   ['550C // UAV-BS-07', 'HRINFO // CORE'],
 ]) {
   const n = code.split(from).length - 1
@@ -258,6 +263,10 @@ const rainCss =
   // overlay, and the overlay's background is made transparent so the rain shows
   // through it.
   '.hrinfo-rain{position:fixed;left:0;top:0;width:100%;height:100%;z-index:900;pointer-events:none}' +
+  // Locked while the animation layer is unreachable (full mode): retire the splash layer and
+  // float the passcode panel on the host root, above everything the show paints.
+  '.hrinfo-lock-only #boot{display:none !important}' +
+  ':host>.hrinfo-lock-root{position:fixed !important;left:50% !important;top:50% !important;transform:translate(-50%,-50%) !important;margin:0 !important;z-index:3000 !important}' +
   // The overlay's own sheet paints `:host{background:var(--bg)}` with --bg an opaque
   // near-black, and that covered the body-level rain layer completely: the reported
   // symptom was the rain flashing into view only as the overlay faded out on exit.
@@ -526,6 +535,39 @@ replaceLine(
     `${ind}// Exposed so the lock shortcut can summon the gate even when no timer is\n` +
     `${ind}// pending — after an unlock there is no countdown left to fire it.\n` +
     `${ind}record.showLock = showLockPanel\n` +
+    `${ind}// A gate that is armed must never hide behind the animation. In full mode the\n` +
+    `${ind}// show keeps painting (finish() is gated) and can cover .hrinfo-stage, which made\n` +
+    `${ind}// Esc, click and the watchdog all no-ops and left the panel unreachable. When the\n` +
+    `${ind}// panel is not actually on screen, retire the splash layer and float it on the root.\n` +
+    `${ind}record.ensureLockVisible = () => {\n` +
+    `${ind}  const panel = record.lockPanel === null ? null : record.lockPanel.element\n` +
+    `${ind}  if (panel === null) return\n` +
+    `${ind}  const box = panel.getBoundingClientRect()\n` +
+    `${ind}  const onScreen = box.width > 0 && box.height > 0 && box.bottom > 0 && box.top < window.innerHeight\n` +
+    `${ind}  if (onScreen) return\n` +
+    `${ind}  host.classList.add('hrinfo-lock-only')\n` +
+    `${ind}  const root = host.shadowRoot ?? host\n` +
+    `${ind}  if (panel.parentNode !== root) {\n` +
+    `${ind}    root.appendChild(panel)\n` +
+    `${ind}    panel.classList.add('hrinfo-lock-root')\n` +
+    `${ind}  }\n` +
+    `${ind}}\n` +
+    `${ind}// Additive to the upstream handlers, which call skip() -> finish() and are therefore\n` +
+    `${ind}// no-ops while the gate is armed: Esc and a click still end the animation and surface\n` +
+    `${ind}// the panel instead of doing nothing at all. The timer re-asserts the watchdog's own\n` +
+    `${ind}// promise (never strand the user) for the gated case.\n` +
+    `${ind}if (record.lockWired !== true) {\n` +
+    `${ind}  record.lockWired = true\n` +
+    `${ind}  window.addEventListener('keydown', (event) => {\n` +
+    `${ind}    if (event.key === 'Escape' && record.locked) record.ensureLockVisible()\n` +
+    `${ind}  }, true)\n` +
+    `${ind}  host.addEventListener('click', () => {\n` +
+    `${ind}    if (record.locked) record.ensureLockVisible()\n` +
+    `${ind}  })\n` +
+    `${ind}  record.lockSafety = window.setTimeout(() => {\n` +
+    `${ind}    if (record.locked) record.ensureLockVisible()\n` +
+    `${ind}  }, 3200)\n` +
+    `${ind}}\n` +
     `${ind}// Arming the gate must not race the show: finish() fires as soon as the\n` +
     `${ind}// animation resolves, so a timer that lands later leaves the splash already\n` +
     `${ind}// fading and an opacity transition in flight. Lock on the next frame instead —\n` +
