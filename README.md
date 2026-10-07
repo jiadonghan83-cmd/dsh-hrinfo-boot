@@ -17,7 +17,7 @@ dsh plugin --profile web add github:jiadonghan83-cmd/dsh-hrinfo-boot#v0.1.2
 ```
 
 On Windows there is also a one-click installer. `install.cmd` and
-`dsh-hrinfo-boot-0.1.4.tgz` live in this repository root — put them in one folder
+`dsh-hrinfo-boot-0.1.5.tgz` live in this repository root — put them in one folder
 (or just clone the repository) and run:
 
 ```bat
@@ -46,7 +46,7 @@ at install time fails for most people. `lib/` is committed instead.
 
 ```bash
 dsh plugin --profile web add /path/to/dsh-hrinfo-boot
-dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.4.tgz
+dsh plugin --profile web add /path/to/dsh-hrinfo-boot-0.1.5.tgz
 ```
 
 ## The unlock code

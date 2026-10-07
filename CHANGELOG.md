@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.1.5
+
+### Full-mode finale
+
+- **The rain now arrives at the end.** In full mode the rain element is no longer mounted at
+  all until the finale (deferred mount), so the boot sequence is the terminal/firmware log
+  and nothing else. When the 30 s watchdog ends the animation, the finale mounts the rain,
+  dims `#app` to 35 % brightness and fades the HRINFO wordmark and the passcode panel back
+  in: the same frame the simple mode shows, with the rain over it, held until unlock.
+- **Phase visibility is driven by JS inline styles.** Every stylesheet-based attempt at
+  hiding the wordmark \+ panel during the log phase failed to take effect on this overlay,
+  while every JS-driven change worked. `setStageVisible()` now sets opacity/visibility
+  directly on `.hrinfo-stage`.
+- **The gate can never become unreachable.** A 33 s unconditional `setStageVisible(true)`
+  is the hard safety net, and the locked state no longer hides the whole splash layer
+  (`#boot`), which had also hidden the rain canvas mounted inside it.
+
+### Earlier fixes rolled into this release
+
+- **HRINFO branding**: the settings row reads `HRINFO 开机动画` with the caption
+  `启动时播放 HRINFO 片头（基于 550C 开发）…`, and the full-mode log prefixes and device
+  names are `[HRINFO]`, `[HRINFO-INFER]`, `HRINFO-ROOT`, `HRINFO-CTRL`, `NET HRINFO`.
+- **Passcode position**: the panel sits in the lower third instead of covering the
+  `SYSTEM IS REWRITTEN` banner, and it is no longer re-parented out of `.hrinfo-stage`.
+- **No more blank white bars**: full mode ships the APP_MARKUP stylesheet whose global
+  `input` rules out-specified the lock sheet's transparent background; the lock inputs are
+  pinned back with `!important`.
+- **aria-hidden** is dropped from the overlay root when the gate is shown, so the passcode
+  field is reachable by assistive technology.
+
 ## 0.1.4
 
 - The settings row is HRINFO-branded: `550C 开机动画` becomes `HRINFO 开机动画` and the

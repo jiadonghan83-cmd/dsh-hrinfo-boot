@@ -182,6 +182,25 @@ for (const [from, to] of [
     '启动时播放 550C 片头；完整模式可用点击或 Esc 跳过。',
     '启动时播放 HRINFO 片头（基于 550C 开发）；完整模式可用点击或 Esc 跳过动画。',
   ],
+  // 完整模式动画里的日志前缀与"设备名"同步成 HRINFO 品牌。
+  // 只列字符串字面量：`CSS_550C`、`.dsh550c-*` 这类标识符/类名一旦被替换，构建产物立刻坏掉。
+  ['[550C-INFER]', '[HRINFO-INFER]'],
+  ['[550C]', '[HRINFO]'],
+  ['550C-ROOT', 'HRINFO-ROOT'],
+  ['CA_550C', 'CA_HRINFO'],
+  ['550C-QUANTUM-0', 'HRINFO-QUANTUM-0'],
+  ['> 550C，授权接入', '> HRINFO，授权接入'],
+  ['授权将授予 550C ', '授权将授予 HRINFO '],
+  ['写入 550C ', '写入 HRINFO '],
+  ['广播 550C ', '广播 HRINFO '],
+  ['550C 接管模式', 'HRINFO 接管模式'],
+  ['550C 临时根证书', 'HRINFO 临时根证书'],
+  ['550C 根证书', 'HRINFO 根证书'],
+  ['expected=550C)', 'expected=HRINFO)'],
+  ['授权：550C。', '授权：HRINFO。'],
+  ['"550C-CTRL"', '"HRINFO-CTRL"'],
+  ['#b-net").textContent = "550C"', '#b-net").textContent = "HRINFO"'],
+  ['已切换至 550C 安全飞控', '已切换至 HRINFO 安全飞控'],
   ['550C // UAV-BS-07', 'HRINFO // CORE'],
 ]) {
   const n = code.split(from).length - 1
@@ -263,10 +282,37 @@ const rainCss =
   // overlay, and the overlay's background is made transparent so the rain shows
   // through it.
   '.hrinfo-rain{position:fixed;left:0;top:0;width:100%;height:100%;z-index:900;pointer-events:none}' +
-  // Locked while the animation layer is unreachable (full mode): retire the splash layer and
-  // float the passcode panel on the host root, above everything the show paints.
-  '.hrinfo-lock-only #boot{display:none !important}' +
-  ':host>.hrinfo-lock-root{position:fixed !important;left:50% !important;top:50% !important;transform:translate(-50%,-50%) !important;margin:0 !important;z-index:3000 !important}' +
+  // Phase visibility, keyed on the finale state rather than the gate: during the log phase
+  // the wordmark and the passcode panel stay invisible (the terminal log owns the screen),
+  // and the finale brings both back — that final frame, rain over the dimmed desktop with
+  // the HRINFO wordmark and the prominent centred cells, is the page the user asked for.
+  // Opacity rather than display, so the panel keeps its layout and stays focusable at the end.
+  // Phase visibility is driven from JS with inline styles (see the finale block). Every
+  // stylesheet-based attempt at this failed to take effect, while every JS-based change
+  // worked (the pending-finale class, the deferred rain mount, the #app dim, the panel
+  // position), so the reveal must not depend on CSS at all.
+  '' +
+  // Full mode ships the APP_MARKUP stylesheet, whose global `input` rules beat the lock
+  // sheet's `.hrinfo-lock-input{background:transparent}` on specificity, so the four
+  // passcode cells rendered as blank white bars. Pin them back.
+  '.hrinfo-lock .hrinfo-lock-input{background:transparent !important;border:0 !important;color:var(--text,#b9d4ef) !important;caret-color:var(--amber,#5fd0e8) !important}' +
+  // 收尾态（仅完整模式）：日志面板先跑完，雨最后压上来并一直下到解锁。
+  // pending 阶段先把雨藏起来，finale 阶段再淡入，同时把桌面/日志压成半透明背景。
+  'canvas.hrinfo-rain{transition:opacity 900ms ease-out}' +
+  // The finale timing lives in CSS on purpose. In full mode the show is force-finished by
+  // the 30 s watchdog, and a JS hook into finish() proved unreliable to place (the anchor
+  // matched more than one line in the generated code), so the reveal is driven by a
+  // keyframe delay instead — a path no JS branch can miss. `hrinfo-finale` (set by JS when
+  // it does fire) simply states the same end state.
+  '@keyframes hrinfoFinaleRain{to{opacity:1}}' +
+  '@keyframes hrinfoFinaleDim{to{opacity:.35;filter:saturate(.55)}}' +
+  '.hrinfo-pending-finale canvas.hrinfo-rain{opacity:0;animation:hrinfoFinaleRain 900ms ease-out 30000ms forwards}' +
+  '.hrinfo-pending-finale #app{animation:hrinfoFinaleDim 900ms ease-out 30000ms forwards}' +
+  '.hrinfo-finale canvas.hrinfo-rain{opacity:1}' +
+  '.hrinfo-finale #app{opacity:.35;filter:saturate(.55)}' +
+  // 垂直居中会和完整模式正中的 `SYSTEM IS REWRITTEN` 横幅叠在一起（会被压在字上），
+  // 所以锁定时把面板放在画面下三分之一：既醒目，又不遮挡动画标题与日志区。
+  ':host>.hrinfo-lock-root{position:fixed !important;left:50% !important;top:auto !important;bottom:7% !important;transform:translateX(-50%) !important;margin:0 !important;z-index:3000 !important}' +
   // The overlay's own sheet paints `:host{background:var(--bg)}` with --bg an opaque
   // near-black, and that covered the body-level rain layer completely: the reported
   // symptom was the rain flashing into view only as the overlay faded out on exit.
@@ -490,6 +536,97 @@ replaceLine('lock release', 'const skip = () => {', (ind) => {
   ].join('\n')
 })
 
+// Full mode only: hold the rain back while the terminal log plays, then bring it in as the
+// finale and keep it raining until the gate is unlocked.
+//
+// The reveal is driven from JS with inline styles, NOT from a stylesheet. A live probe
+// proved why: the rain canvas is a BODY-LEVEL element (`shadowRoot.querySelector` returned
+// no canvas while the rain was plainly on screen), so any rule inside the overlay's shadow
+// root — which is where every other style of this plugin lives — cannot reach it. The
+// `hrinfo-pending-finale` class is kept for diagnostics, but the pixels are inline styles
+// set from this block, which is proven to execute (the class lands on the host).
+replaceLine('finale state', 'record.rain = mountRain(stage)', (ind) =>
+  `${ind}if (mode === 'full') {\n` +
+  `${ind}  host.classList.add('hrinfo-pending-finale')\n` +
+  `${ind}  // The rain canvas lives on document.body, so the overlay's shadow-root sheet cannot\n` +
+  `${ind}  // reach it. Inject a DOCUMENT-level sheet instead: it proves effective (the #app\n` +
+  `${ind}  // dim inside the shadow root works the same way), and the 30 s keyframe delay needs no\n` +
+  `${ind}  // JS timing at all. The class goes on <body>, next to the canvas it styles.\n` +
+  `${ind}  const finaleStyle = document.createElement('style')\n` +
+  `${ind}  finaleStyle.textContent =\n` +
+  `${ind}    'canvas.hrinfo-rain{transition:opacity 900ms ease-out}' +\n` +
+  `${ind}    '@keyframes hrinfoRainIn{from{opacity:0}to{opacity:1}}' +\n` +
+  `${ind}    'body.hrinfo-pending-finale canvas.hrinfo-rain{opacity:0;' +\n` +
+  `${ind}    'animation:hrinfoRainIn 900ms ease-out 30000ms forwards}'\n` +
+  `${ind}  document.head.appendChild(finaleStyle)\n` +
+  `${ind}  document.body.classList.add('hrinfo-pending-finale')\n` +
+  `${ind}  // The stage (wordmark + passcode panel) is inside the overlay's shadow root, so it is\n` +
+  `${ind}  // reachable directly. Visibility is set as INLINE styles from here: the stylesheet route\n` +
+  `${ind}  // kept failing to take effect, while every JS-driven change worked.\n` +
+  `${ind}  const finaleStage = () => host.shadowRoot === undefined ? null : host.shadowRoot.querySelector('.hrinfo-stage')\n` +
+  `${ind}  const setStageVisible = (visible) => {\n` +
+  `${ind}    const el = finaleStage()\n` +
+  `${ind}    if (el === null) return\n` +
+  `${ind}    el.style.transition = 'opacity 900ms ease-out'\n` +
+  `${ind}    el.style.opacity = visible ? '1' : '0'\n` +
+  `${ind}    el.style.visibility = visible ? 'visible' : 'hidden'\n` +
+  `${ind}  }\n` +
+  `${ind}  setStageVisible(false)\n` +
+  `${ind}  const finaleCanvas = () => document.querySelector('canvas.hrinfo-rain')\n` +
+  `${ind}  const finaleApp = host.shadowRoot === undefined ? null : host.shadowRoot.querySelector('#app')\n` +
+  `${ind}  record.revealFinale = () => {\n` +
+  `${ind}    setStageVisible(true)\n` +
+  `${ind}    document.body.classList.remove('hrinfo-pending-finale')\n` +
+  `${ind}    document.body.classList.add('hrinfo-finale')\n` +
+  `${ind}    // Full mode mounts the rain here and nowhere else: no element, no early rain.\n` +
+  `${ind}    if (mode === 'full' && record.rain === null) record.rain = record.mountFinaleRain()\n` +
+  `${ind}    const shown = finaleCanvas()\n` +
+  `${ind}    if (shown !== null) shown.style.opacity = '1'\n` +
+  `${ind}    if (finaleApp !== null) {\n` +
+  `${ind}      finaleApp.style.transition = 'opacity 900ms ease-out, filter 900ms ease-out'\n` +
+  `${ind}      finaleApp.style.opacity = '.35'\n` +
+  `${ind}      finaleApp.style.filter = 'saturate(.55)'\n` +
+  `${ind}    }\n` +
+  `${ind}  }\n` +
+  `${ind}  record.finale = () => {\n` +
+  `${ind}    if (record.finaleDone === true) return\n` +
+  `${ind}    record.finaleDone = true\n` +
+  `${ind}    host.classList.remove('hrinfo-pending-finale')\n` +
+  `${ind}    host.classList.add('hrinfo-finale')\n` +
+  `${ind}    record.revealFinale()\n` +
+  `${ind}  }\n` +
+  `${ind}  // 30 s matches the full-mode watchdog that ends the show; finish() also calls\n` +
+  `${ind}  // record.finale(), so this timer is the one path that can never be missed.\n` +
+  `${ind}  record.finaleTimer = window.setTimeout(record.finale, 30000)\n` +
+  `${ind}  // Hard safety net, independent of every other path: whatever happens, the stage\n` +
+  `${ind}  // (wordmark + passcode panel) becomes visible again. Being unable to reach the gate\n` +
+  `${ind}  // is the one failure that must never be possible on a daily-driver install.\n` +
+  `${ind}  window.setTimeout(() => setStageVisible(true), 33000)\n` +
+  `${ind}  // Deferred mount: in full mode the rain element does not exist until the finale.\n` +
+  `${ind}  // Holding it back with styles kept failing across the shadow-root/body boundary\n` +
+  `${ind}  // (the canvas is a BODY-LEVEL element), and a missing element cannot be seen.\n` +
+  `${ind}  record.mountFinaleRain = () => {\n` +
+  `${ind}    try {\n` +
+  `${ind}      return mountRain(stage)\n` +
+  `${ind}    } catch (error) {\n` +
+  `${ind}      console.error('[hrinfo-boot] finale rain failed', error)\n` +
+  `${ind}      return null\n` +
+  `${ind}    }\n` +
+  `${ind}  }\n` +
+  `${ind}}\n` +
+  `${ind}record.rain = mountRain(stage)\n` +
+  `${ind}// Full mode must not show the rain until the finale. Holding it back with styles kept\n` +
+  `${ind}// failing across the shadow-root/body boundary (the canvas is a BODY-LEVEL element),\n` +
+  `${ind}// so in full mode the element is mounted and torn down again in the SAME tick — nothing\n` +
+  `${ind}// is ever painted — and the finale mounts it for real. This line itself stays verbatim:\n` +
+  `${ind}// another patch anchors on it.\n` +
+  `${ind}if (mode === 'full') {\n` +
+  `${ind}  const preFinaleRain = record.rain\n` +
+  `${ind}  record.rain = null\n` +
+  `${ind}  if (typeof preFinaleRain === 'function') preFinaleRain()\n` +
+  `${ind}}\n`,
+)
+
 // ...but the panel itself is built inside the try block, because it needs `stage`.
 // Defining it outside throws `stage is not defined` at the moment the gate opens.
 replaceLine(
@@ -503,6 +640,10 @@ replaceLine(
     `${ind}const showLockPanel = () => {\n` +
     `${ind}  if (record.lockPanel !== null || record.locked) return\n` +
     `${ind}  record.locked = true\n` +
+    `${ind}  // The overlay root carries aria-hidden, which would hide the passcode input from\n` +
+    `${ind}  // assistive technology and logged a console warning once the field took focus.\n` +
+    `${ind}  // The gate is the one thing on screen that must be reachable, so unhide it.\n` +
+    `${ind}  host.removeAttribute('aria-hidden')\n` +
     `${ind}  host.classList.add('hrinfo-locked')\n` +
     `${ind}  const lockStyle = document.createElement('style')\n` +
     `${ind}  lockStyle.textContent = LOCK_CSS\n` +
@@ -545,12 +686,11 @@ replaceLine(
     `${ind}  const box = panel.getBoundingClientRect()\n` +
     `${ind}  const onScreen = box.width > 0 && box.height > 0 && box.bottom > 0 && box.top < window.innerHeight\n` +
     `${ind}  if (onScreen) return\n` +
+    `${ind}  // Deliberately NOT re-parented any more: moving the panel out of .hrinfo-stage\n` +
+    `${ind}  // dropped it to the bottom edge as a barely visible UNLOCK box, instead of the\n` +
+    `${ind}  // prominent centred cells the finale is meant to show. The panel stays where the\n` +
+    `${ind}  // stylesheet puts it; the .hrinfo-finale rules keep it visible and on top.\n` +
     `${ind}  host.classList.add('hrinfo-lock-only')\n` +
-    `${ind}  const root = host.shadowRoot ?? host\n` +
-    `${ind}  if (panel.parentNode !== root) {\n` +
-    `${ind}    root.appendChild(panel)\n` +
-    `${ind}    panel.classList.add('hrinfo-lock-root')\n` +
-    `${ind}  }\n` +
     `${ind}}\n` +
     `${ind}// Additive to the upstream handlers, which call skip() -> finish() and are therefore\n` +
     `${ind}// no-ops while the gate is armed: Esc and a click still end the animation and surface\n` +
@@ -600,6 +740,12 @@ replaceLine(
   'record.finished = true',
   (ind) =>
     `${ind}record.finished = true\n` +
+    `${ind}// The animation is over — show resolved, click/Esc skip, or the watchdog fired:\
+\n` +
+    `${ind}// hand over to the finale (rain in, backdrop dimmed) BEFORE the gate check below,\n` +
+    `${ind}// because that check returns early and would otherwise swallow the only moment the\n` +
+    `${ind}// rain can arrive. The gate itself stays armed; only the animation retires.\n` +
+    `${ind}if (typeof record.finale === 'function') record.finale()\n` +
     `${ind}// With a code configured the splash must not retire until the host says yes;\n` +
     `${ind}// release() fades and disposes it instead. Returning before the fade also\n` +
     `${ind}// means no opacity transition is left in flight for the lock to fight.\n` +
