@@ -563,15 +563,17 @@ replaceLine('finale state', 'record.rain = mountRain(stage)', (ind) =>
   `${ind}  // The stage (wordmark + passcode panel) is inside the overlay's shadow root, so it is\n` +
   `${ind}  // reachable directly. Visibility is set as INLINE styles from here: the stylesheet route\n` +
   `${ind}  // kept failing to take effect, while every JS-driven change worked.\n` +
+  `${ind}  // This helper can only ever REVEAL the gate, never hide it. An earlier revision also\n` +
+  `${ind}  // hid it at the start so the log phase would own the screen; when that reveal failed the\n` +
+  `${ind}  // user was locked out with no visible input at all. Reachability beats the nicety.\n` +
   `${ind}  const finaleStage = () => host.shadowRoot === undefined ? null : host.shadowRoot.querySelector('.hrinfo-stage')\n` +
-  `${ind}  const setStageVisible = (visible) => {\n` +
+  `${ind}  const setStageVisible = () => {\n` +
   `${ind}    const el = finaleStage()\n` +
   `${ind}    if (el === null) return\n` +
   `${ind}    el.style.transition = 'opacity 900ms ease-out'\n` +
-  `${ind}    el.style.opacity = visible ? '1' : '0'\n` +
-  `${ind}    el.style.visibility = visible ? 'visible' : 'hidden'\n` +
+  `${ind}    el.style.opacity = '1'\n` +
+  `${ind}    el.style.visibility = 'visible'\n` +
   `${ind}  }\n` +
-  `${ind}  setStageVisible(false)\n` +
   `${ind}  const finaleCanvas = () => document.querySelector('canvas.hrinfo-rain')\n` +
   `${ind}  const finaleApp = host.shadowRoot === undefined ? null : host.shadowRoot.querySelector('#app')\n` +
   `${ind}  record.revealFinale = () => {\n` +

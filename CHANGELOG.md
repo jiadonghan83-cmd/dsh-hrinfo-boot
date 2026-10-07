@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.6 — hotfix
+
+**0.1.5 could lock you out; do not use it.** In 0.1.5 the wordmark and the passcode panel
+were hidden for the first 30 s so the log phase would own the screen. When that reveal did
+not land, the gate was unreachable and the screen stayed black with no visible input.
+
+- `setStageVisible()` can now only ever REVEAL the gate — it no longer takes a "hide"
+  argument at all, and the initial `setStageVisible(false)` is gone. There is no code path
+  left in which the passcode panel is invisible.
+- The full-mode finale is unchanged and still works: the rain element is not mounted until
+  the finale, then the rain arrives and `#app` dims to 35 % while the panel stays on screen.
+- Everything else from 0.1.5 (HRINFO branding, panel position, white-bar fix, aria-hidden)
+  is included.
+
+Rule kept for the graph and for future work: **no animation logic may make the gate
+unreachable — reachability beats any visual nicety.**
+
 ## 0.1.5
 
 ### Full-mode finale
